@@ -1,0 +1,11 @@
+[ {
+  "SKU" : "SKU-12345",
+  "Pris" : "2300",
+  "Kategori" : "Fly",
+  "id" : "57f750bb-ae44-4326-8a3f-c31f69fcc16a"
+}, {
+  "SKU" : "SKU-2345",
+  "Pris" : "1100.45",
+  "Kategori" : "Bil",
+  "id" : "59bb2ce2-08bb-4343-8700-a8831c6b1dec"
+} ]

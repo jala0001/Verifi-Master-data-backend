@@ -1,5 +1,5 @@
 package verifi.verifimasterdatabackend.service;
-
+import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,20 +38,23 @@ public class TableDataService {
         // Valider row data
         validateRowData(dataTable, rowData);
 
+        // Konverter til korrekte datatyper
+        Map<String, Object> convertedData = convertToCorrectTypes(dataTable, rowData);
+
         // Læs eksisterende data
         List<Map<String, Object>> rows = jsonFileService.readJsonFile(dataTable.getJsonFilePath());
 
         // Tilføj ID til ny række
         String rowId = UUID.randomUUID().toString();
-        rowData.put("id", rowId);
+        convertedData.put("id", rowId);
 
         // Tilføj række
-        rows.add(rowData);
+        rows.add(convertedData);
 
         // Gem til JSON fil
         jsonFileService.writeJsonFile(dataTable.getJsonFilePath(), rows);
 
-        return rowData;
+        return convertedData;
     }
 
     @Transactional
@@ -62,6 +65,9 @@ public class TableDataService {
         // Valider row data
         validateRowData(dataTable, rowData);
 
+        // Konverter til korrekte datatyper
+        Map<String, Object> convertedData = convertToCorrectTypes(dataTable, rowData);
+
         // Læs eksisterende data
         List<Map<String, Object>> rows = jsonFileService.readJsonFile(dataTable.getJsonFilePath());
 
@@ -70,8 +76,8 @@ public class TableDataService {
         for (int i = 0; i < rows.size(); i++) {
             Map<String, Object> row = rows.get(i);
             if (rowId.equals(row.get("id"))) {
-                rowData.put("id", rowId); // Behold ID
-                rows.set(i, rowData);
+                convertedData.put("id", rowId); // Behold ID
+                rows.set(i, convertedData);
                 found = true;
                 break;
             }
@@ -84,7 +90,7 @@ public class TableDataService {
         // Gem til JSON fil
         jsonFileService.writeJsonFile(dataTable.getJsonFilePath(), rows);
 
-        return rowData;
+        return convertedData;
     }
 
     @Transactional
@@ -122,28 +128,80 @@ public class TableDataService {
         }
     }
 
-    private void validateDataType(String columnName, Object value, verifi.verifimasterdatabackend.enums.DataType dataType) {
-        try {
-            switch (dataType) {
+    private Map<String, Object> convertToCorrectTypes(DataTable dataTable, Map<String, Object> rowData) {
+        Map<String, Object> convertedData = new HashMap<>();
+
+        for (TableColumn column : dataTable.getColumns()) {
+            Object value = rowData.get(column.getColumnName());
+
+            if (value == null || (value instanceof String && ((String) value).trim().isEmpty())) {
+                // Behold null/empty værdier som de er
+                convertedData.put(column.getColumnName(), value);
+                continue;
+            }
+
+            // Konverter baseret på datatype
+            switch (column.getDataType()) {
                 case INTEGER:
-                    Integer.parseInt(value.toString());
+                    convertedData.put(column.getColumnName(), Integer.parseInt(value.toString()));
                     break;
                 case DECIMAL:
-                    Double.parseDouble(value.toString());
+                    convertedData.put(column.getColumnName(), Double.parseDouble(value.toString()));
+                    break;
+                case BOOLEAN:
+                    convertedData.put(column.getColumnName(), value instanceof Boolean ? value : Boolean.parseBoolean(value.toString()));
                     break;
                 case DATE:
-                    // Simpel dato validering (YYYY-MM-DD format)
-                    if (!value.toString().matches("\\d{4}-\\d{2}-\\d{2}")) {
-                        throw new RuntimeException("Invalid date format for '" + columnName + "'. Expected YYYY-MM-DD");
+                case TEXT:
+                default:
+                    // Behold som string
+                    convertedData.put(column.getColumnName(), value.toString());
+                    break;
+            }
+        }
+
+        return convertedData;
+    }
+
+    private void validateDataType(String columnName, Object value, verifi.verifimasterdatabackend.enums.DataType dataType) {
+        try {
+            String strValue = value.toString().trim();
+
+            switch (dataType) {
+                case INTEGER:
+                    Integer.parseInt(strValue);
+                    break;
+
+                case DECIMAL:
+                    double decimalValue = Double.parseDouble(strValue);
+                    // Tjek for max 2 decimaler
+                    String[] parts = strValue.split("\\.");
+                    if (parts.length == 2 && parts[1].length() > 2) {
+                        throw new RuntimeException("Decimal value for '" + columnName +
+                                "' can have maximum 2 decimal places. Got: " + strValue);
                     }
                     break;
+
+                case DATE:
+                    // Valider ISO format (YYYY-MM-DD)
+                    if (!strValue.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                        throw new RuntimeException("Invalid date format for '" + columnName +
+                                "'. Expected YYYY-MM-DD, got: " + strValue);
+                    }
+                    break;
+
                 case BOOLEAN:
                     if (!(value instanceof Boolean)) {
                         throw new RuntimeException("Invalid boolean value for '" + columnName + "'");
                     }
                     break;
+
                 case TEXT:
-                    // Text accepterer alt
+                    // Maksimum 100 tegn
+                    if (strValue.length() > 100) {
+                        throw new RuntimeException("Text value for '" + columnName +
+                                "' cannot exceed 100 characters. Got: " + strValue.length() + " characters");
+                    }
                     break;
             }
         } catch (NumberFormatException e) {

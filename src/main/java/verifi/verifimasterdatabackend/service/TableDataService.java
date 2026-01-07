@@ -135,8 +135,7 @@ public class TableDataService {
             Object value = rowData.get(column.getColumnName());
 
             if (value == null || (value instanceof String && ((String) value).trim().isEmpty())) {
-                // Behold null/empty værdier som de er
-                convertedData.put(column.getColumnName(), value);
+                convertedData.put(column.getColumnName(), null);
                 continue;
             }
 

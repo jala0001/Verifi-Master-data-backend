@@ -1,0 +1,29 @@
+[ {
+  "AvailableDate" : "2026-01-02",
+  "id" : "9cf881c1-40a0-4d00-9643-b283489e7770",
+  "HourlyRate" : 850.0,
+  "YearsExperience" : 7,
+  "Name" : "Michael Jensen",
+  "CertifiedPowerBI" : true
+}, {
+  "AvailableDate" : "2026-01-15",
+  "id" : "5d2e505b-5fd9-446a-af49-88bd1d27b067",
+  "HourlyRate" : 1200.5,
+  "YearsExperience" : 12,
+  "Name" : "Sarah Nielsen",
+  "CertifiedPowerBI" : true
+}, {
+  "AvailableDate" : "2026-03-10",
+  "id" : "d0ef7858-50c8-41fb-82bf-46c8c7b1a48b",
+  "HourlyRate" : 650.0,
+  "YearsExperience" : 3,
+  "Name" : "Anders Petersen",
+  "CertifiedPowerBI" : false
+}, {
+  "AvailableDate" : "2026-01-20",
+  "id" : "2f71a7b1-bde7-467e-a09e-0c5f123877e1",
+  "HourlyRate" : 975.0,
+  "YearsExperience" : 9,
+  "Name" : "Emma Larsen",
+  "CertifiedPowerBI" : true
+} ]
